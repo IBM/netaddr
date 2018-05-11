@@ -125,9 +125,13 @@ func incrementIP(ip net.IP) (result net.IP) {
 func expandNet(n *net.IPNet, limit int) []net.IP {
 	ones, bits := n.Mask.Size()
 
-	size := 1 << uint(bits-ones)
-	if limit < size {
-		size = limit
+	size := limit
+	max := 1 << 30
+	if bits-ones < 30 {
+		max = 1 << uint(bits-ones)
+	}
+	if max < size {
+		size = max
 	}
 	result := make([]net.IP, size)
 	next := n.IP
