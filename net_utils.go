@@ -8,6 +8,10 @@ import (
 // containsNet returns true if net2 is a subset of net1. To be clear, it
 // returns true if net1 == net2 also.
 func containsNet(net1, net2 *net.IPNet) bool {
+	// If the two networks are different IP versions, return false
+	if len(net1.IP) != len(net2.IP) {
+		return false
+	}
 	if !net1.Contains(net2.IP) {
 		return false
 	}
@@ -20,6 +24,11 @@ func containsNet(net1, net2 *net.IPNet) bool {
 // netDifference returns the set difference a - b. It returns the list of CIDRs
 // in order from largest to smallest. They are *not* sorted by network IP.
 func netDifference(a, b *net.IPNet) (result []*net.IPNet) {
+	// If the two networks are different IP versions, return a
+	if len(a.IP) != len(b.IP) {
+		return []*net.IPNet{a}
+	}
+
 	// If b contains a then the difference is empty
 	if containsNet(b, a) {
 		return
