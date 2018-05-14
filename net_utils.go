@@ -2,8 +2,14 @@ package netaddr
 
 import (
 	"bytes"
+	"math/big"
 	"net"
 )
+
+func NetSize(n *net.IPNet) *big.Int {
+	ones, bits := n.Mask.Size()
+	return big.NewInt(0).Lsh(big.NewInt(1), uint(bits-ones))
+}
 
 // containsNet returns true if net2 is a subset of net1. To be clear, it
 // returns true if net1 == net2 also.
