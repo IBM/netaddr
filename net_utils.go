@@ -2,8 +2,54 @@ package netaddr
 
 import (
 	"bytes"
+	"math/big"
 	"net"
+	"strings"
 )
+
+// NetSize returns the size of the given IPNet in terms of the number of
+// addresses. It always includes the network and broadcast addresses.
+func NetSize(n *net.IPNet) *big.Int {
+	ones, bits := n.Mask.Size()
+	return big.NewInt(0).Lsh(big.NewInt(1), uint(bits-ones))
+}
+
+// ParseIP is like net.ParseIP except that it parses IPv4 addresses as 4 byte
+// addresses instead of 16 bytes mapped IPv6 addresses. This has been one of my
+// biggest gripes against the net package.
+func ParseIP(address string) net.IP {
+	if strings.Contains(address, ":") {
+		return net.ParseIP(address)
+	}
+	return net.ParseIP(address).To4()
+}
+
+// NewIP returns a new IP with the given size. The size must be 4 for IPv4 and
+// 16 for IPv6.
+func NewIP(size int) net.IP {
+	if size == 4 {
+		return net.ParseIP("0.0.0.0").To4()
+	}
+	if size == 16 {
+		return net.ParseIP("::")
+	}
+	panic("Bad value for size")
+}
+
+// NetworkAddr returns the first address in the given network, or the network address.
+func NetworkAddr(n *net.IPNet) net.IP {
+	return n.IP
+}
+
+// BroadcastAddr returns the last address in the given network, or the broadcast address.
+func BroadcastAddr(n *net.IPNet) net.IP {
+	// The golang net package doesn't make it easy to calculate the broadcast address. :(
+	broadcast := NewIP(len(n.IP))
+	for i := 0; i < len(n.IP); i++ {
+		broadcast[i] = n.IP[i] | ^n.Mask[i]
+	}
+	return broadcast
+}
 
 // containsNet returns true if net2 is a subset of net1. To be clear, it
 // returns true if net1 == net2 also.
