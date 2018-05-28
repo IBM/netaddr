@@ -10,7 +10,7 @@ type IPSet struct {
 }
 
 // InsertNet ensures this IPSet has the entire given IP network
-func (me *IPSet) InsertNet(net *net.IPNet) {
+func (s *IPSet) InsertNet(net *net.IPNet) {
 	if net == nil {
 		return
 	}
@@ -18,9 +18,9 @@ func (me *IPSet) InsertNet(net *net.IPNet) {
 	newNet := net
 	for {
 		newNode := &ipTree{net: newNet}
-		me.tree = me.tree.insert(newNode)
+		s.tree = s.tree.insert(newNode)
 
-		if me.tree != newNode && newNode.up == nil {
+		if s.tree != newNode && newNode.up == nil {
 			break
 		}
 
@@ -45,42 +45,42 @@ func (me *IPSet) InsertNet(net *net.IPNet) {
 
 // RemoveNet ensures that all of the IPs in the given network are removed from
 // the set if present.
-func (me *IPSet) RemoveNet(net *net.IPNet) {
+func (s *IPSet) RemoveNet(net *net.IPNet) {
 	if net == nil {
 		return
 	}
 
-	me.tree = me.tree.removeNet(net)
+	s.tree = s.tree.removeNet(net)
 }
 
 // ContainsNet returns true iff this IPSet contains all IPs in the given network
-func (me *IPSet) ContainsNet(net *net.IPNet) bool {
-	if me == nil || net == nil {
+func (s *IPSet) ContainsNet(net *net.IPNet) bool {
+	if s == nil || net == nil {
 		return false
 	}
-	return me.tree.contains(&ipTree{net: net})
+	return s.tree.contains(&ipTree{net: net})
 }
 
 // Insert ensures this IPSet has the given IP
-func (me *IPSet) Insert(ip net.IP) {
-	me.InsertNet(ipToNet(ip))
+func (s *IPSet) Insert(ip net.IP) {
+	s.InsertNet(ipToNet(ip))
 }
 
 // Remove ensures this IPSet does not contain the given IP
-func (me *IPSet) Remove(ip net.IP) {
-	me.RemoveNet(ipToNet(ip))
+func (s *IPSet) Remove(ip net.IP) {
+	s.RemoveNet(ipToNet(ip))
 }
 
 // Contains returns true iff this IPSet contains the the given IP address
-func (me *IPSet) Contains(ip net.IP) bool {
-	return me.ContainsNet(ipToNet(ip))
+func (s *IPSet) Contains(ip net.IP) bool {
+	return s.ContainsNet(ipToNet(ip))
 }
 
 // Union computes the union of this IPSet and another set. It returns the
 // result as a new set.
-func (me *IPSet) Union(other *IPSet) (newSet *IPSet) {
+func (s *IPSet) Union(other *IPSet) (newSet *IPSet) {
 	newSet = &IPSet{}
-	me.tree.walk(func(node *ipTree) {
+	s.tree.walk(func(node *ipTree) {
 		newSet.InsertNet(node.net)
 	})
 	other.tree.walk(func(node *ipTree) {
@@ -91,9 +91,9 @@ func (me *IPSet) Union(other *IPSet) (newSet *IPSet) {
 
 // Difference computes the set difference between this IPSet and another one
 // It returns the result as a new set.
-func (me *IPSet) Difference(other *IPSet) (newSet *IPSet) {
+func (s *IPSet) Difference(other *IPSet) (newSet *IPSet) {
 	newSet = &IPSet{}
-	me.tree.walk(func(node *ipTree) {
+	s.tree.walk(func(node *ipTree) {
 		newSet.InsertNet(node.net)
 	})
 	other.tree.walk(func(node *ipTree) {
@@ -104,11 +104,11 @@ func (me *IPSet) Difference(other *IPSet) (newSet *IPSet) {
 
 // GetIPs retrieves a slice of the first IPs in the set ordered by address up
 // to the given limit.
-func (me *IPSet) GetIPs(limit int) (ips []net.IP) {
+func (s *IPSet) GetIPs(limit int) (ips []net.IP) {
 	if limit == 0 {
 		limit = int(^uint(0) >> 1) // MaxInt
 	}
-	for node := me.tree.first(); node != nil; node = node.next() {
+	for node := s.tree.first(); node != nil; node = node.next() {
 		ips = append(ips, expandNet(node.net, limit-len(ips))...)
 	}
 	return
