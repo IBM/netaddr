@@ -1,6 +1,6 @@
 language: go
 
-go_import_path: github.ibm.com/henry-gessau/netaddr
+go_import_path: github.com/IBM/netaddr
 
 go:
 - 1.9
