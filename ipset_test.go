@@ -271,7 +271,7 @@ func TestIPSetIntersection(t *testing.T) {
 	for i, testCase := range testCases {
 
 		set1, set2, interSect := &IPSet{}, &IPSet{}, &IPSet{}
-		//set1.InsertNet(Ten24)
+
 		for j := 0; j < len(testCase.case1); j++ {
 			_, cidr, _ := net.ParseCIDR(testCase.case1[j])
 			set1.InsertNet(cidr)
