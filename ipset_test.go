@@ -222,6 +222,7 @@ func TestIPSetUnion(t *testing.T) {
 	set := set1.Union(set2)
 	assert.True(t, set.ContainsNet(Ten24))
 	assert.True(t, set.ContainsNet(cidr))
+
 }
 
 func TestIPSetDifference(t *testing.T) {
@@ -234,6 +235,64 @@ func TestIPSetDifference(t *testing.T) {
 	set := set1.Difference(set2)
 	assert.True(t, set.ContainsNet(Ten24))
 	assert.False(t, set.ContainsNet(cidr))
+}
+
+func TestIPSetIntersection(t *testing.T) {
+
+	testCases := []struct {
+		case1        []string
+		case2        []string
+		intersection []string
+	}{
+		{
+			[]string{"10.0.0.0/20", "10.5.8.0/24", "10.23.324.100/23"},
+			[]string{"10.0.0.2/30", "10.5.8.200/29", "10.23.324.104/27"},
+			[]string{"10.0.0.2/30", "10.5.8.200/29", "10.23.324.104/27"},
+		},
+
+		{
+			[]string{"10.0.0.2/30", "10.5.8.200/29", "10.23.324.104/27"},
+			[]string{"10.0.0.0/20", "10.5.8.0/24", "10.23.324.100/23"},
+			[]string{"10.0.0.2/30", "10.5.8.200/29", "10.23.324.104/27"},
+		},
+
+		{
+			[]string{"10.0.5.0/24", "10.5.8.200/29", "10.23.324.104/27"},
+			[]string{"10.6.0.0/24", "10.9.9.0/29", "10.23.6.100/23"},
+			[]string{""},
+		},
+		{
+			[]string{"10.23.6.100/24", "10.5.8.200/29", "10.23.324.104/27"},
+			[]string{"10.6.0.0/24", "10.9.9.0/29", "10.23.6.200/29"},
+			[]string{"10.23.6.200/29"},
+		},
+	}
+
+	for i, testCase := range testCases {
+
+		set1, set2, interSect := &IPSet{}, &IPSet{}, &IPSet{}
+		//set1.InsertNet(Ten24)
+		for j := 0; j < len(testCase.case1); j++ {
+			_, cidr, _ := net.ParseCIDR(testCase.case1[j])
+			set1.InsertNet(cidr)
+		}
+
+		for k := 0; k < len(testCase.case2); k++ {
+			_, cidr, _ := net.ParseCIDR(testCase.case2[k])
+			set2.InsertNet(cidr)
+		}
+
+		for l := 0; l < len(testCase.intersection); l++ {
+			_, cidr, _ := net.ParseCIDR(testCase.intersection[l])
+			interSect.InsertNet(cidr)
+		}
+		set := set1.Intersection(set2)
+
+		if !assert.Equal(t, interSect, set) {
+			t.Logf("TestCase %d\nEXPECTED: %s\nACTUAL: %s\n", i, testCase.intersection, set)
+		}
+
+	}
 }
 
 func TestIPSetInsertV6(t *testing.T) {

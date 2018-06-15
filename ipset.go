@@ -113,3 +113,21 @@ func (s *IPSet) GetIPs(limit int) (ips []net.IP) {
 	}
 	return
 }
+
+//Intersection computes the set intersect between this IPSet and another ones
+//It returns a new set which is the intersection.
+func (s *IPSet) Intersection(set1 *IPSet) (interSect *IPSet) {
+	interSect = &IPSet{}
+	s.tree.walk(func(node *ipTree) {
+		if set1.ContainsNet(node.net) {
+			interSect.InsertNet(node.net)
+		}
+	})
+	set1.tree.walk(func(node *ipTree) {
+		if s.ContainsNet(node.net) {
+			interSect.InsertNet(node.net)
+		}
+	})
+
+	return
+}
