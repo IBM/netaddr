@@ -128,6 +128,5 @@ func (s *IPSet) Intersection(set1 *IPSet) (interSect *IPSet) {
 			interSect.InsertNet(node.net)
 		}
 	})
-
 	return
 }
