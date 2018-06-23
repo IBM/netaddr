@@ -13,13 +13,13 @@ var (
 	Eights = net.ParseIP("8.8.8.8").To4()
 	Nines  = net.ParseIP("9.9.9.9").To4()
 
-	_, Ten24, _    = net.ParseCIDR("10.0.0.0/24")
-	_, Ten24128, _ = net.ParseCIDR("10.0.0.128/25")
+	Ten24, _       = ParseNet("10.0.0.0/24")
+	Ten24128, _    = ParseNet("10.0.0.128/25")
 	Ten24Router    = net.ParseIP("10.0.0.1").To4()
 	Ten24Broadcast = net.ParseIP("10.0.0.255").To4()
 
-	_, V6Net1, _ = net.ParseCIDR("2001:db8:1234:abcd::/64")
-	_, V6Net2, _ = net.ParseCIDR("2001:db8:abcd:1234::/64")
+	V6Net1, _    = ParseNet("2001:db8:1234:abcd::/64")
+	V6Net2, _    = ParseNet("2001:db8:abcd:1234::/64")
 	V6Net1Router = net.ParseIP("2001:db8:1234:abcd::1")
 
 	V6NetSize = big.NewInt(0).Lsh(big.NewInt(1), 64) // 2**64 or 18446744073709551616
@@ -28,17 +28,17 @@ var (
 func TestNetDifference(t *testing.T) {
 	diff := netDifference(Ten24, Ten24128)
 
-	_, cidr, _ := net.ParseCIDR("10.0.0.0/25")
+	cidr, _ := ParseNet("10.0.0.0/25")
 	assert.Equal(t, []*net.IPNet{cidr}, diff)
 
-	_, cidr, _ = net.ParseCIDR("10.0.0.120/29")
+	cidr, _ = ParseNet("10.0.0.120/29")
 	diff = netDifference(Ten24, cidr)
 
-	_, cidr1, _ := net.ParseCIDR("10.0.0.128/25")
-	_, cidr2, _ := net.ParseCIDR("10.0.0.0/26")
-	_, cidr3, _ := net.ParseCIDR("10.0.0.64/27")
-	_, cidr4, _ := net.ParseCIDR("10.0.0.96/28")
-	_, cidr5, _ := net.ParseCIDR("10.0.0.112/29")
+	cidr1, _ := ParseNet("10.0.0.128/25")
+	cidr2, _ := ParseNet("10.0.0.0/26")
+	cidr3, _ := ParseNet("10.0.0.64/27")
+	cidr4, _ := ParseNet("10.0.0.96/28")
+	cidr5, _ := ParseNet("10.0.0.112/29")
 	assert.Equal(t, []*net.IPNet{cidr1, cidr2, cidr3, cidr4, cidr5}, diff)
 }
 
@@ -111,30 +111,30 @@ func TestIPSetInsertSequential(t *testing.T) {
 	assert.Equal(t, 1, set.tree.numNodes())
 	assert.Equal(t, big.NewInt(4), set.tree.size())
 
-	_, cidr, _ := net.ParseCIDR("192.168.1.0/30")
+	cidr, _ := ParseNet("192.168.1.0/30")
 	assert.True(t, set.ContainsNet(cidr))
 
-	_, cidr, _ = net.ParseCIDR("192.168.1.4/31")
+	cidr, _ = ParseNet("192.168.1.4/31")
 	set.InsertNet(cidr)
 	assert.Equal(t, 2, set.tree.numNodes())
 	assert.True(t, set.ContainsNet(cidr))
 
-	_, cidr, _ = net.ParseCIDR("192.168.1.6/31")
+	cidr, _ = ParseNet("192.168.1.6/31")
 	set.InsertNet(cidr)
 	assert.Equal(t, 1, set.tree.numNodes())
 	assert.True(t, set.ContainsNet(cidr))
 
-	_, cidr, _ = net.ParseCIDR("192.168.1.6/31")
+	cidr, _ = ParseNet("192.168.1.6/31")
 	set.InsertNet(cidr)
 	assert.Equal(t, 1, set.tree.numNodes())
 	assert.True(t, set.ContainsNet(cidr))
 
-	_, cidr, _ = net.ParseCIDR("192.168.0.240/29")
+	cidr, _ = ParseNet("192.168.0.240/29")
 	set.InsertNet(cidr)
 	assert.Equal(t, 2, set.tree.numNodes())
 	assert.True(t, set.ContainsNet(cidr))
 
-	_, cidr, _ = net.ParseCIDR("192.168.0.248/29")
+	cidr, _ = ParseNet("192.168.0.248/29")
 	set.InsertNet(cidr)
 	assert.Equal(t, 2, set.tree.numNodes())
 	assert.True(t, set.ContainsNet(cidr))
@@ -150,7 +150,7 @@ func TestIPSetRemove(t *testing.T) {
 	assert.Equal(t, big.NewInt(128), set.tree.size())
 	assert.False(t, set.ContainsNet(Ten24))
 	assert.False(t, set.ContainsNet(Ten24128))
-	_, cidr, _ := net.ParseCIDR("10.0.0.0/25")
+	cidr, _ := ParseNet("10.0.0.0/25")
 	assert.True(t, set.ContainsNet(cidr))
 
 	set.Remove(Ten24Router)
@@ -172,7 +172,7 @@ func TestIPSetRemoveNetworkBroadcast(t *testing.T) {
 	assert.False(t, set.Contains(Ten24Broadcast))
 	assert.False(t, set.Contains(Ten24.IP))
 
-	_, cidr, _ := net.ParseCIDR("10.0.0.128/26")
+	cidr, _ := ParseNet("10.0.0.128/26")
 	assert.True(t, set.ContainsNet(cidr))
 	assert.True(t, set.Contains(Ten24Router))
 
@@ -185,11 +185,11 @@ func TestIPSetRemoveAll(t *testing.T) {
 	set := IPSet{}
 
 	set.InsertNet(Ten24)
-	_, cidr1, _ := net.ParseCIDR("192.168.0.0/25")
+	cidr1, _ := ParseNet("192.168.0.0/25")
 	set.InsertNet(cidr1)
 	assert.Equal(t, 2, set.tree.numNodes())
 
-	_, cidr2, _ := net.ParseCIDR("0.0.0.0/0")
+	cidr2, _ := ParseNet("0.0.0.0/0")
 	set.RemoveNet(cidr2)
 	assert.Equal(t, 0, set.tree.numNodes())
 	assert.False(t, set.ContainsNet(Ten24))
@@ -216,7 +216,7 @@ func TestIPSetUnion(t *testing.T) {
 	set1, set2 := &IPSet{}, &IPSet{}
 
 	set1.InsertNet(Ten24)
-	_, cidr, _ := net.ParseCIDR("192.168.0.248/29")
+	cidr, _ := ParseNet("192.168.0.248/29")
 	set2.InsertNet(cidr)
 
 	set := set1.Union(set2)
@@ -228,7 +228,7 @@ func TestIPSetDifference(t *testing.T) {
 	set1, set2 := &IPSet{}, &IPSet{}
 
 	set1.InsertNet(Ten24)
-	_, cidr, _ := net.ParseCIDR("192.168.0.248/29")
+	cidr, _ := ParseNet("192.168.0.248/29")
 	set2.InsertNet(cidr)
 
 	set := set1.Difference(set2)
@@ -263,7 +263,7 @@ func TestIPSetAllocateDeallocate(t *testing.T) {
 
 	set := IPSet{}
 
-	_, bigNet, _ := net.ParseCIDR("15.1.64.0/16")
+	bigNet, _ := ParseNet("15.1.0.0/16")
 	set.InsertNet(bigNet)
 
 	ips := set.GetIPs(0)
