@@ -113,3 +113,8 @@ func (s *IPSet) GetIPs(limit int) (ips []net.IP) {
 	}
 	return
 }
+
+// ToRanges converts the set into a minimal list of IPRange that represents the
+// same set of IPs.
+func (s *IPSet) ToRanges() (ranges []*IPRange) {
+}
