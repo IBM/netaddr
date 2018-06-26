@@ -222,7 +222,6 @@ func TestIPSetUnion(t *testing.T) {
 	set := set1.Union(set2)
 	assert.True(t, set.ContainsNet(Ten24))
 	assert.True(t, set.ContainsNet(cidr))
-
 }
 
 func TestIPSetDifference(t *testing.T) {
@@ -244,7 +243,7 @@ func TestIPSetIntersection(t *testing.T) {
 		intersection []string
 	}{
 		{
-			[]string{"10.0.20.0/20", "10.5.8.0/24", "10.23.224.0/23"},
+			[]string{"10.0.16.0/20", "10.5.8.0/24", "10.23.224.0/23"},
 			[]string{"10.0.20.0/30", "10.5.8.0/29", "10.23.224.0/27"},
 			[]string{"10.23.224.0/27", "10.0.20.0/30", "10.5.8.0/29"},
 		},
@@ -282,6 +281,11 @@ func TestIPSetIntersection(t *testing.T) {
 			[]string{"2001:db8:0:23::/64", "2001:db8:0:20::/64", "172.16.1.0/24"},
 			[]string{"2001:db9:0:14::/96", "2001:db9:0:10::/96", "172.16.1.0/28"},
 			[]string{"172.16.1.0/28"},
+		},
+		{
+			[]string{"10.5.8.0/29"},
+			[]string{"10.10.0.0/20", "10.5.8.0/24", "10.23.224.0/23"},
+			[]string{"10.5.8.0/29"},
 		},
 	}
 	for i, testCase := range testCases {
