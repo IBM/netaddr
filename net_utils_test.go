@@ -9,7 +9,7 @@ import (
 )
 
 func TestExpandNet(t *testing.T) {
-	_, n, _ := net.ParseCIDR("203.0.113.0/29")
+	n, _ := ParseNet("203.0.113.0/29")
 	ips := expandNet(n, 10)
 	assert.Equal(t, 8, len(ips))
 	assert.Equal(t, net.ParseIP("203.0.113.0").To4(), ips[0])
@@ -17,7 +17,7 @@ func TestExpandNet(t *testing.T) {
 }
 
 func TestExpandNetLimit(t *testing.T) {
-	_, n, _ := net.ParseCIDR("203.0.113.0/29")
+	n, _ := ParseNet("203.0.113.0/29")
 	ips := expandNet(n, 5)
 	assert.Equal(t, 5, len(ips))
 	assert.Equal(t, net.ParseIP("203.0.113.0").To4(), ips[0])
@@ -25,7 +25,7 @@ func TestExpandNetLimit(t *testing.T) {
 }
 
 func TestExpandNetLarge(t *testing.T) {
-	_, n, _ := net.ParseCIDR("2001:db8::/56")
+	n, _ := ParseNet("2001:db8::/56")
 	ips := expandNet(n, 1000)
 	assert.Equal(t, 1000, len(ips))
 	assert.Equal(t, net.ParseIP("2001:db8::0"), ips[0])
@@ -34,32 +34,32 @@ func TestExpandNetLarge(t *testing.T) {
 }
 
 func TestNetSize(t *testing.T) {
-	_, n, _ := net.ParseCIDR("10.0.0.0/24")
+	n, _ := ParseNet("10.0.0.0/24")
 	assert.Equal(t, int64(256), NetSize(n).Int64())
 }
 
 func TestNetSizeHost(t *testing.T) {
-	_, n, _ := net.ParseCIDR("203.0.113.29/32")
+	n, _ := ParseNet("203.0.113.29/32")
 	assert.Equal(t, int64(1), NetSize(n).Int64())
 }
 
 func TestNetSizeSlash8(t *testing.T) {
-	_, n, _ := net.ParseCIDR("15.0.0.0/8")
+	n, _ := ParseNet("15.0.0.0/8")
 	assert.Equal(t, int64(16777216), NetSize(n).Int64())
 }
 
 func TestNetSizeV6(t *testing.T) {
-	_, n, _ := net.ParseCIDR("2001:db8::/64")
+	n, _ := ParseNet("2001:db8::/64")
 	assert.Equal(t, big.NewInt(0).Lsh(big.NewInt(1), 64), NetSize(n))
 }
 
 func TestNetSizeV6Huge(t *testing.T) {
-	_, n, _ := net.ParseCIDR("2001:db8::/8")
+	n, _ := ParseNet("2000::/8")
 	assert.Equal(t, big.NewInt(0).Lsh(big.NewInt(1), 120), NetSize(n))
 }
 
 func TestNetSizeV6Host(t *testing.T) {
-	_, n, _ := net.ParseCIDR("2001:db8::1/128")
+	n, _ := ParseNet("2001:db8::1/128")
 	assert.Equal(t, big.NewInt(1), NetSize(n))
 }
 
@@ -81,13 +81,39 @@ func TestNetIP(t *testing.T) {
 	assert.Equal(t, net.ParseIP("::"), NewIP(16))
 }
 
-// Just a little shortcut for parsing a CIDR
+// Just a little shortcut for parsing a CIDR and get the net.IPNet.
 func parse(str string) (n *net.IPNet) {
 	_, parsed, err := net.ParseCIDR(str)
 	if err == nil {
 		n = parsed
 	}
 	return
+}
+
+func TestParseNet(t *testing.T) {
+	n, err := ParseNet("10.0.0.0/24")
+	assert.Equal(t, parse("10.0.0.0/24"), n)
+	assert.Nil(t, err)
+
+	n, err = ParseNet("2001:db8::/64")
+	assert.Equal(t, parse("2001:db8::/64"), n)
+	assert.Nil(t, err)
+}
+
+func TestParseNetNonZeroHost(t *testing.T) {
+	n, err := ParseNet("10.0.20.0/21")
+	assert.NotNil(t, err)
+	assert.Nil(t, n)
+
+	n, err = ParseNet("2001:db8::1/64")
+	assert.NotNil(t, err)
+	assert.Nil(t, n)
+}
+
+func TestParseNetInvalidAddresses(t *testing.T) {
+	n, err := ParseNet("10.0.324.0/24")
+	assert.NotNil(t, err)
+	assert.Nil(t, n)
 }
 
 func TestNetworkAddr(t *testing.T) {

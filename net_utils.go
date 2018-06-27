@@ -2,6 +2,7 @@ package netaddr
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"net"
 	"strings"
@@ -22,6 +23,21 @@ func ParseIP(address string) net.IP {
 		return net.ParseIP(address)
 	}
 	return net.ParseIP(address).To4()
+}
+
+// ParseNet parses an IP network from a CIDR. Unlike net.ParseCIDR, it does not
+// allow a CIDR where the host part is non-zero. For example, the following
+// CIDRs will result in an error: 203.0.113.1/24, 2001:db8::1/64, 10.0.20.0/20
+func ParseNet(cidr string) (parsed *net.IPNet, err error) {
+	ip, parsed, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+	if !ip.Equal(parsed.IP) {
+		err = fmt.Errorf("Host part is not zero")
+		return nil, err
+	}
+	return
 }
 
 // NewIP returns a new IP with the given size. The size must be 4 for IPv4 and
