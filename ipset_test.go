@@ -300,19 +300,18 @@ func TestIntersectionAinB9(t *testing.T) {
 	testIntersection(t, case1, case2, output)
 }
 
-//func testIntersection(input1 []string, input2 []string, output []string)
 func testIntersection(t *testing.T, input1 []string, input2 []string, output []string) {
 	set1, set2, interSect := &IPSet{}, &IPSet{}, &IPSet{}
 	for i := 0; i < len(input1); i++ {
-		_, cidr, _ := net.ParseCIDR(input1[i])
+		cidr, _ := ParseNet(input1[i])
 		set1.InsertNet(cidr)
 	}
 	for j := 0; j < len(input2); j++ {
-		_, cidr, _ := net.ParseCIDR(input2[j])
+		cidr, _ := ParseNet(input2[j])
 		set2.InsertNet(cidr)
 	}
 	for k := 0; k < len(output); k++ {
-		_, cidr, _ := net.ParseCIDR(output[k])
+		cidr, _ := ParseNet(output[k])
 		interSect.InsertNet(cidr)
 	}
 	set := set1.Intersection(set2)
