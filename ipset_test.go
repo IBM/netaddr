@@ -236,6 +236,93 @@ func TestIPSetDifference(t *testing.T) {
 	assert.False(t, set.ContainsNet(cidr))
 }
 
+func TestIntersectionAinB1(t *testing.T) {
+	case1 := []string{"10.0.16.0/20", "10.5.8.0/24", "10.23.224.0/23"}
+	case2 := []string{"10.0.20.0/30", "10.5.8.0/29", "10.23.224.0/27"}
+	output := []string{"10.23.224.0/27", "10.0.20.0/30", "10.5.8.0/29"}
+	testIntersection(t, case1, case2, output)
+
+}
+
+func TestIntersectionAinB2(t *testing.T) {
+	case1 := []string{"10.10.0.0/30", "10.5.8.0/29", "10.23.224.0/27"}
+	case2 := []string{"10.10.0.0/20", "10.5.8.0/24", "10.23.224.0/23"}
+	output := []string{"10.10.0.0/30", "10.5.8.0/29", "10.23.224.0/27"}
+	testIntersection(t, case1, case2, output)
+}
+
+func TestIntersectionAinB3(t *testing.T) {
+	case1 := []string{"10.0.5.0/24", "10.5.8.0/29", "10.23.224.0/27"}
+	case2 := []string{"10.6.0.0/24", "10.9.9.0/29", "10.23.6.0/23"}
+	output := []string{}
+	testIntersection(t, case1, case2, output)
+}
+
+func TestIntersectionAinB4(t *testing.T) {
+	case1 := []string{"10.23.6.0/24", "10.5.8.0/29", "10.23.224.0/27"}
+	case2 := []string{"10.6.0.0/24", "10.9.9.0/29", "10.23.6.0/29"}
+	output := []string{"10.23.6.0/29"}
+	testIntersection(t, case1, case2, output)
+}
+
+func TestIntersectionAinB5(t *testing.T) {
+	case1 := []string{"2001:db8:0:23::/96", "2001:db8:0:20::/96", "2001:db8:0:15::/96"}
+	case2 := []string{"2001:db8:0:23::/64", "2001:db8:0:20::/64", "2001:db8:0:15::/64"}
+	output := []string{"2001:db8:0:23::/96", "2001:db8:0:20::/96", "2001:db8:0:15::/96"}
+	testIntersection(t, case1, case2, output)
+}
+
+func TestIntersectionAinB6(t *testing.T) {
+	case1 := []string{"2001:db8:0:23::/64", "2001:db8:0:20::/64", "2001:db8:0:15::/64"}
+	case2 := []string{"2001:db8:0:23::/96", "2001:db8:0:20::/96", "2001:db8:0:15::/96"}
+	output := []string{"2001:db8:0:15::/96", "2001:db8:0:20::/96", "2001:db8:0:23::/96"}
+	testIntersection(t, case1, case2, output)
+}
+
+func TestIntersectionAinB7(t *testing.T) {
+	case1 := []string{"2001:db8:0:23::/64", "2001:db8:0:20::/64", "2001:db8:0:15::/64"}
+	case2 := []string{"2001:db8:0:14::/96", "2001:db8:0:10::/96", "2001:db8:0:8::/96"}
+	output := []string{}
+	testIntersection(t, case1, case2, output)
+}
+
+func TestIntersectionAinB8(t *testing.T) {
+	case1 := []string{"2001:db8:0:23::/64", "2001:db8:0:20::/64", "172.16.1.0/24"}
+	case2 := []string{"2001:db9:0:14::/96", "2001:db9:0:10::/96", "172.16.1.0/28"}
+	output := []string{"172.16.1.0/28"}
+	testIntersection(t, case1, case2, output)
+}
+
+func TestIntersectionAinB9(t *testing.T) {
+	case1 := []string{"10.5.8.0/29"}
+	case2 := []string{"10.10.0.0/20", "10.5.8.0/24", "10.23.224.0/23"}
+	output := []string{"10.5.8.0/29"}
+	testIntersection(t, case1, case2, output)
+}
+
+func testIntersection(t *testing.T, input1 []string, input2 []string, output []string) {
+	set1, set2, interSect := &IPSet{}, &IPSet{}, &IPSet{}
+	for i := 0; i < len(input1); i++ {
+		cidr, _ := ParseNet(input1[i])
+		set1.InsertNet(cidr)
+	}
+	for j := 0; j < len(input2); j++ {
+		cidr, _ := ParseNet(input2[j])
+		set2.InsertNet(cidr)
+	}
+	for k := 0; k < len(output); k++ {
+		cidr, _ := ParseNet(output[k])
+		interSect.InsertNet(cidr)
+	}
+	set := set1.Intersection(set2)
+	s1 := set.String()
+	intSect := interSect.String()
+	if !assert.Equal(t, intSect, s1) {
+		t.Logf("\nEXPECTED: %s\nACTUAL: %s\n", intSect, s1)
+	}
+
+}
+
 func TestIPSetInsertV6(t *testing.T) {
 	set := IPSet{}
 
