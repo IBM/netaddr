@@ -197,6 +197,20 @@ func TestIPSetRemoveAll(t *testing.T) {
 	assert.False(t, set.ContainsNet(cidr1))
 }
 
+func TestIPSet_RemoveTop(t *testing.T) {
+	testSet := IPSet{}
+	ip1 := net.ParseIP("10.0.0.1")
+	ip2 := net.ParseIP("10.0.0.2")
+
+	testSet.Insert(ip2) // top
+	testSet.Insert(ip1) // inserted at left
+	testSet.Remove(ip2) // remove top node
+
+	assert.True(t, testSet.Contains(ip1))
+	assert.False(t, testSet.Contains(ip2))
+	assert.Nil(t, testSet.tree.next())
+}
+
 func TestIPSetInsertOverlapping(t *testing.T) {
 	set := IPSet{}
 
