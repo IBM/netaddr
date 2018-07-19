@@ -14,6 +14,8 @@ var (
 	Nines  = net.ParseIP("9.9.9.9").To4()
 
 	Ten24, _       = ParseNet("10.0.0.0/24")
+	TenOne24, _    = ParseNet("10.0.1.0/24")
+	TenTwo24, _    = ParseNet("10.0.2.0/24")
 	Ten24128, _    = ParseNet("10.0.0.128/25")
 	Ten24Router    = net.ParseIP("10.0.0.1").To4()
 	Ten24Broadcast = net.ParseIP("10.0.0.255").To4()
@@ -46,6 +48,7 @@ func TestIPSetInit(t *testing.T) {
 	set := IPSet{}
 
 	assert.Equal(t, big.NewInt(0), set.tree.size())
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetContains(t *testing.T) {
@@ -54,6 +57,7 @@ func TestIPSetContains(t *testing.T) {
 	assert.Equal(t, big.NewInt(0), set.tree.size())
 	assert.False(t, set.Contains(Eights))
 	assert.False(t, set.Contains(Nines))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetInsert(t *testing.T) {
@@ -67,6 +71,7 @@ func TestIPSetInsert(t *testing.T) {
 	set.Insert(Eights)
 	assert.Equal(t, 2, set.tree.numNodes())
 	assert.True(t, set.Contains(Eights))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetInsertNetwork(t *testing.T) {
@@ -79,6 +84,7 @@ func TestIPSetInsertNetwork(t *testing.T) {
 	assert.True(t, set.ContainsNet(Ten24128))
 	assert.False(t, set.Contains(Nines))
 	assert.False(t, set.Contains(Eights))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetInsertMixed(t *testing.T) {
@@ -96,6 +102,7 @@ func TestIPSetInsertMixed(t *testing.T) {
 	assert.True(t, set.Contains(Ten24Router))
 	assert.True(t, set.Contains(Eights))
 	assert.True(t, set.Contains(Nines))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetInsertSequential(t *testing.T) {
@@ -103,12 +110,16 @@ func TestIPSetInsertSequential(t *testing.T) {
 
 	set.Insert(net.ParseIP("192.168.1.0").To4())
 	assert.Equal(t, 1, set.tree.numNodes())
+	assert.Equal(t, []error{}, set.tree.validate())
 	set.Insert(net.ParseIP("192.168.1.1").To4())
 	assert.Equal(t, 1, set.tree.numNodes())
+	assert.Equal(t, []error{}, set.tree.validate())
 	set.Insert(net.ParseIP("192.168.1.2").To4())
 	assert.Equal(t, 2, set.tree.numNodes())
+	assert.Equal(t, []error{}, set.tree.validate())
 	set.Insert(net.ParseIP("192.168.1.3").To4())
 	assert.Equal(t, 1, set.tree.numNodes())
+	assert.Equal(t, []error{}, set.tree.validate())
 	assert.Equal(t, big.NewInt(4), set.tree.size())
 
 	cidr, _ := ParseNet("192.168.1.0/30")
@@ -133,11 +144,13 @@ func TestIPSetInsertSequential(t *testing.T) {
 	set.InsertNet(cidr)
 	assert.Equal(t, 2, set.tree.numNodes())
 	assert.True(t, set.ContainsNet(cidr))
+	assert.Equal(t, []error{}, set.tree.validate())
 
 	cidr, _ = ParseNet("192.168.0.248/29")
 	set.InsertNet(cidr)
 	assert.Equal(t, 2, set.tree.numNodes())
 	assert.True(t, set.ContainsNet(cidr))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetRemove(t *testing.T) {
@@ -152,10 +165,12 @@ func TestIPSetRemove(t *testing.T) {
 	assert.False(t, set.ContainsNet(Ten24128))
 	cidr, _ := ParseNet("10.0.0.0/25")
 	assert.True(t, set.ContainsNet(cidr))
+	assert.Equal(t, []error{}, set.tree.validate())
 
 	set.Remove(Ten24Router)
 	assert.Equal(t, big.NewInt(127), set.tree.size())
 	assert.Equal(t, 7, set.tree.numNodes())
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetRemoveNetworkBroadcast(t *testing.T) {
@@ -171,6 +186,7 @@ func TestIPSetRemoveNetworkBroadcast(t *testing.T) {
 	assert.False(t, set.ContainsNet(Ten24128))
 	assert.False(t, set.Contains(Ten24Broadcast))
 	assert.False(t, set.Contains(Ten24.IP))
+	assert.Equal(t, []error{}, set.tree.validate())
 
 	cidr, _ := ParseNet("10.0.0.128/26")
 	assert.True(t, set.ContainsNet(cidr))
@@ -195,6 +211,7 @@ func TestIPSetRemoveAll(t *testing.T) {
 	assert.False(t, set.ContainsNet(Ten24))
 	assert.False(t, set.ContainsNet(Ten24128))
 	assert.False(t, set.ContainsNet(cidr1))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSet_RemoveTop(t *testing.T) {
@@ -209,6 +226,7 @@ func TestIPSet_RemoveTop(t *testing.T) {
 	assert.True(t, testSet.Contains(ip1))
 	assert.False(t, testSet.Contains(ip2))
 	assert.Nil(t, testSet.tree.next())
+	assert.Equal(t, []error{}, testSet.tree.validate())
 }
 
 func TestIPSetInsertOverlapping(t *testing.T) {
@@ -224,6 +242,7 @@ func TestIPSetInsertOverlapping(t *testing.T) {
 	assert.True(t, set.Contains(Ten24Router))
 	assert.False(t, set.Contains(Eights))
 	assert.False(t, set.Contains(Nines))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetUnion(t *testing.T) {
@@ -236,6 +255,7 @@ func TestIPSetUnion(t *testing.T) {
 	set := set1.Union(set2)
 	assert.True(t, set.ContainsNet(Ten24))
 	assert.True(t, set.ContainsNet(cidr))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetDifference(t *testing.T) {
@@ -248,6 +268,7 @@ func TestIPSetDifference(t *testing.T) {
 	set := set1.Difference(set2)
 	assert.True(t, set.ContainsNet(Ten24))
 	assert.False(t, set.ContainsNet(cidr))
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIntersectionAinB1(t *testing.T) {
@@ -334,6 +355,8 @@ func testIntersection(t *testing.T, input1 []string, input2 []string, output []s
 	if !assert.Equal(t, intSect, s1) {
 		t.Logf("\nEXPECTED: %s\nACTUAL: %s\n", intSect, s1)
 	}
+	assert.Equal(t, []error{}, set.tree.validate())
+	assert.Equal(t, []error{}, interSect.tree.validate())
 
 }
 
@@ -357,6 +380,7 @@ func TestIPSetInsertV6(t *testing.T) {
 	assert.True(t, set.ContainsNet(V6Net1))
 	assert.True(t, set.ContainsNet(V6Net2))
 	assert.Equal(t, big.NewInt(0).Mul(big.NewInt(2), V6NetSize), set.tree.size())
+	assert.Equal(t, []error{}, set.tree.validate())
 }
 
 func TestIPSetAllocateDeallocate(t *testing.T) {
@@ -376,11 +400,13 @@ func TestIPSetAllocateDeallocate(t *testing.T) {
 		allocated.Insert(ips[rand.Intn(65536)])
 	}
 	assert.Equal(t, big.NewInt(14500), allocated.tree.size())
+	assert.Equal(t, []error{}, allocated.tree.validate())
 	ips = allocated.GetIPs(0)
 	assert.Equal(t, 14500, len(ips))
 	for _, ip := range ips {
 		assert.True(t, set.Contains(ip))
 	}
+	assert.Equal(t, []error{}, set.tree.validate())
 
 	available := set.Difference(allocated)
 	assert.Equal(t, big.NewInt(51036), available.tree.size())
@@ -390,4 +416,5 @@ func TestIPSetAllocateDeallocate(t *testing.T) {
 		assert.False(t, allocated.Contains(ip))
 	}
 	assert.Equal(t, 51036, len(ips))
+	assert.Equal(t, []error{}, available.tree.validate())
 }
