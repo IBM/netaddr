@@ -118,6 +118,8 @@ func (t *ipTree) remove() *ipTree {
 			} else {
 				t.up.setRight(newChild)
 			}
+		} else if newChild != nil {
+			newChild.up = t.up
 		}
 		return newChild
 	}
