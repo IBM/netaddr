@@ -2,6 +2,7 @@ package netaddr
 
 import (
 	"bytes"
+	"errors"
 	"math/big"
 	"net"
 )
@@ -270,4 +271,45 @@ func (t *ipTree) numNodes() int {
 		return 0
 	}
 	return 1 + t.left.numNodes() + t.right.numNodes()
+}
+
+func (t *ipTree) validate() []error {
+	errs := []error{}
+
+	// if tree is nil, then it is valid
+	if t == nil {
+		return errs
+	}
+
+	// assert root's up is nil
+	if t.up != nil {
+		errs = append(errs, errors.New("root up must be nil"))
+	}
+
+	// validate each node
+	var lastNode *ipTree
+	t.walk(func(n *ipTree) {
+		// assert that the node's are linked properly
+		if n.left != nil && n.left.up != n {
+			errs = append(errs, errors.New("linkage error: left.up node must equal node"))
+		}
+		if n.right != nil && n.right.up != n {
+			errs = append(errs, errors.New("linkage error: right.up node must equal node"))
+		}
+
+		if n.net == nil {
+			errs = append(errs, errors.New("each node in tree must have a network"))
+		} else if !n.net.IP.Mask(n.net.Mask).Equal(n.net.IP) {
+			// verify that the network is valid
+			errs = append(errs, errors.New("cidr invalid: "+n.net.String()))
+		}
+
+		// assert order is correct
+		if lastNode != nil && bytes.Compare(lastNode.net.IP, n.net.IP) >= 0 {
+			errs = append(errs, errors.New("nodes must be in order: "+lastNode.net.IP.String()+" !< "+n.net.IP.String()))
+		}
+		lastNode = n
+	})
+
+	return errs
 }
