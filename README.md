@@ -1,7 +1,7 @@
 # go netaddr package
 
 This repo contains a library to complement the [go net library][net] and
-provide containers and utilities like in python's [netaddr].
+provides containers and utilities like in python's [netaddr].
 
 Please see the [api documentation] for details. [The authoritative source for
 this library is found on github][source]. We encourage importing this code
