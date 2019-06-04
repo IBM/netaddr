@@ -16,13 +16,27 @@ func NetSize(n *net.IPNet) *big.Int {
 }
 
 // ParseIP is like net.ParseIP except that it parses IPv4 addresses as 4 byte
-// addresses instead of 16 bytes mapped IPv6 addresses. This has been one of my
+// addresses instead of 16-byte mapped IPv6 addresses. This has been one of my
 // biggest gripes against the net package.
 func ParseIP(address string) net.IP {
 	if strings.Contains(address, ":") {
 		return net.ParseIP(address)
 	}
 	return net.ParseIP(address).To4()
+}
+
+// ParseCIDR is like net.ParseCIDR except that it parses IPv4 addresses as 4
+// byte addresses instead of 16-byte mapped IPv6 addresses. Much like ParseIP.
+func ParseCIDR(cidr string) (net.IP, *net.IPNet, error) {
+	ip, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return net.IP{}, nil, err
+	}
+
+	if strings.Contains(cidr, ":") {
+		return ip, ipNet, nil
+	}
+	return ip.To4(), ipNet, nil
 }
 
 // ParseNet parses an IP network from a CIDR. Unlike net.ParseCIDR, it does not

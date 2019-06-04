@@ -116,6 +116,22 @@ func TestParseNetInvalidAddresses(t *testing.T) {
 	assert.Nil(t, n)
 }
 
+func TestParseCIDR(t *testing.T) {
+	ip, n, err := ParseCIDR("10.0.0.1/24")
+	assert.Equal(t, parse("10.0.0.0/24"), n)
+	assert.Equal(t, 4, len(n.IP))
+	assert.Equal(t, 4, len(ip))
+	assert.Equal(t, 4, len(n.Mask))
+	assert.Nil(t, err)
+
+	ip, n, err = ParseCIDR("2001:db8::/64")
+	assert.Equal(t, parse("2001:db8::/64"), n)
+	assert.Equal(t, 16, len(n.IP))
+	assert.Equal(t, 16, len(ip))
+	assert.Equal(t, 16, len(n.Mask))
+	assert.Nil(t, err)
+}
+
 func TestNetworkAddr(t *testing.T) {
 	assert.Equal(t, ParseIP("203.0.113.0"), NetworkAddr(parse("203.0.113.0/24")))
 	assert.Equal(t, ParseIP("10.0.0.0"), NetworkAddr(parse("10.0.0.0/16")))
