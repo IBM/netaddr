@@ -118,6 +118,7 @@ func TestParseNetInvalidAddresses(t *testing.T) {
 
 func TestParseCIDR(t *testing.T) {
 	ip, n, err := ParseCIDR("10.0.0.1/24")
+	assert.Equal(t, net.ParseIP("10.0.0.1").To4(), ip)
 	assert.Equal(t, parse("10.0.0.0/24"), n)
 	assert.Equal(t, 4, len(n.IP))
 	assert.Equal(t, 4, len(ip))
@@ -125,11 +126,59 @@ func TestParseCIDR(t *testing.T) {
 	assert.Nil(t, err)
 
 	ip, n, err = ParseCIDR("2001:db8::/64")
+	assert.Equal(t, net.ParseIP("2001:db8::"), ip)
 	assert.Equal(t, parse("2001:db8::/64"), n)
 	assert.Equal(t, 16, len(n.IP))
 	assert.Equal(t, 16, len(ip))
 	assert.Equal(t, 16, len(n.Mask))
 	assert.Nil(t, err)
+}
+
+func TestParseCIDRToNet(t *testing.T) {
+	ipNet, err := ParseCIDRToNet("10.0.0.1/24")
+	assert.Equal(t, net.ParseIP("10.0.0.1").To4(), ipNet.IP)
+	assert.Equal(t, 4, len(ipNet.IP))
+	assert.Equal(t, 4, len(ipNet.Mask))
+	assert.Nil(t, err)
+	ones, bits := ipNet.Mask.Size()
+	assert.Equal(t, 24, ones)
+	assert.Equal(t, 32, bits)
+
+	ipNet, err = ParseCIDRToNet("2001:db8::1/64")
+	assert.Equal(t, net.ParseIP("2001:db8::1"), ipNet.IP)
+	assert.Equal(t, 16, len(ipNet.IP))
+	assert.Equal(t, 16, len(ipNet.Mask))
+	assert.Nil(t, err)
+	ones, bits = ipNet.Mask.Size()
+	assert.Equal(t, 64, ones)
+	assert.Equal(t, 128, bits)
+}
+
+func TestParseCIDRErrors(t *testing.T) {
+	tests := []struct {
+		cidr string
+	}{
+		{cidr: ""},
+		{cidr: "10.0.0.1"},
+		{cidr: "bogus"},
+		{cidr: "300.1.2.3/24"},
+		{cidr: "4.1.2.3/33"},
+		{cidr: "2001:db8::/129"},
+		{cidr: "2001:db8::"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.cidr, func(t *testing.T) {
+			ip, n, err := ParseCIDR(tt.cidr)
+			assert.NotNil(t, err)
+			assert.Equal(t, 0, len(ip))
+			assert.Nil(t, n)
+
+			ipNet, err := ParseCIDRToNet(tt.cidr)
+			assert.NotNil(t, err)
+			assert.Nil(t, ipNet)
+		})
+	}
 }
 
 func TestNetworkAddr(t *testing.T) {

@@ -39,6 +39,17 @@ func ParseCIDR(cidr string) (net.IP, *net.IPNet, error) {
 	return ip.To4(), ipNet, nil
 }
 
+// ParseCIDRToNet is like ParseCIDR except that it only returns one *net.IPNet
+// that unifies the IP address and the mask. It leaves out the network address
+// which ParseCIDR returns.
+func ParseCIDRToNet(cidr string) (*net.IPNet, error) {
+	ip, ipNet, err := ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+	return &net.IPNet{IP: ip, Mask: ipNet.Mask}, nil
+}
+
 // ParseNet parses an IP network from a CIDR. Unlike net.ParseCIDR, it does not
 // allow a CIDR where the host part is non-zero. For example, the following
 // CIDRs will result in an error: 203.0.113.1/24, 2001:db8::1/64, 10.0.20.0/20
