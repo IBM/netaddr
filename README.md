@@ -1,6 +1,6 @@
 # netaddr package for go
 
-This repo contains a library to complement the [go net library][net] and
+This repo contains a library to complement the [go net library][net] and 
 provides containers and utilities like in python's [netaddr].
 
 Please see the [api documentation] for details. [The authoritative source for
