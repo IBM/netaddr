@@ -1,6 +1,7 @@
 package netaddr
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 	"net"
@@ -417,4 +418,16 @@ func TestIPSetAllocateDeallocate(t *testing.T) {
 	}
 	assert.Equal(t, 51036, len(ips))
 	assert.Equal(t, []error{}, available.tree.validate())
+}
+
+func TestGetNetworks(t *testing.T) {
+	s := &IPSet{}
+	assert.Equal(t, []*net.IPNet{}, s.GetNetworks())
+	s.InsertNet(Ten24)
+	assert.Equal(t, "[10.0.0.0/24]", fmt.Sprintf("%s", s.GetNetworks()))
+	ten25, _ := ParseNet("10.0.0.0/25")
+	s.RemoveNet(ten25)
+	assert.Equal(t, "[10.0.0.128/25]", fmt.Sprintf("%s", s.GetNetworks()))
+	s.Remove(ParseIP("10.0.0.129"))
+	assert.Equal(t, "[10.0.0.128/32 10.0.0.130/31 10.0.0.132/30 10.0.0.136/29 10.0.0.144/28 10.0.0.160/27 10.0.0.192/26]", fmt.Sprintf("%s", s.GetNetworks()))
 }

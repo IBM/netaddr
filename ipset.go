@@ -114,6 +114,15 @@ func (s *IPSet) GetIPs(limit int) (ips []net.IP) {
 	return
 }
 
+// GetNetworks Retrieve a list of all networks included in the ipTree
+func (s *IPSet) GetNetworks() []*net.IPNet {
+	networks := []*net.IPNet{}
+	s.tree.walk(func(node *ipTree) {
+		networks = append(networks, node.net)
+	})
+	return networks
+}
+
 // Intersection computes the set intersect between this IPSet and another one
 // It returns a new set which is the intersection.
 func (s *IPSet) Intersection(set1 *IPSet) (interSect *IPSet) {
