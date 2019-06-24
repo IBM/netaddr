@@ -92,9 +92,9 @@ func BroadcastAddr(n *net.IPNet) net.IP {
 	return broadcast
 }
 
-// containsNet returns true if net2 is a subset of net1. To be clear, it
+// ContainsNet returns true if net2 is a subset of net1. To be clear, it
 // returns true if net1 == net2 also.
-func containsNet(net1, net2 *net.IPNet) bool {
+func ContainsNet(net1, net2 *net.IPNet) bool {
 	// If the two networks are different IP versions, return false
 	if len(net1.IP) != len(net2.IP) {
 		return false
@@ -117,11 +117,11 @@ func netDifference(a, b *net.IPNet) (result []*net.IPNet) {
 	}
 
 	// If b contains a then the difference is empty
-	if containsNet(b, a) {
+	if ContainsNet(b, a) {
 		return
 	}
 	// If a doesn't contain b then the difference is equal to a
-	if !containsNet(a, b) {
+	if !ContainsNet(a, b) {
 		return []*net.IPNet{a}
 	}
 
