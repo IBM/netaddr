@@ -114,7 +114,7 @@ func (s *IPSet) GetIPs(limit int) (ips []net.IP) {
 	return
 }
 
-// GetNetworks Retrieve a list of all networks included in the ipTree
+// GetNetworks retrieves a list of all networks included in the ipTree
 func (s *IPSet) GetNetworks() []*net.IPNet {
 	networks := []*net.IPNet{}
 	s.tree.walk(func(node *ipTree) {
