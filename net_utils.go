@@ -207,6 +207,41 @@ func incrementIP(ip net.IP) (result net.IP) {
 	return
 }
 
+// decrementIP returns the given IP 1 1
+func decrementIP(ip net.IP) (result net.IP) {
+	// copy the ip into the result
+	result = make([]byte, len(ip))
+	copy([]byte(result), []byte(ip))
+
+	// Can't decrement an nil or invalid ip
+	if len(result) != 4 && len(result) != 16 {
+		panic(fmt.Errorf("Bad number of bytes for address: %d", len(result)))
+	}
+	// do subtract
+	borrow := false
+	if result[len(ip)-1] == 0 {
+		result[len(ip)-1] = byte(255) // if borrow
+		borrow = true
+	} else {
+		result[len(ip)-1] = result[len(ip)-1] - 1
+	}
+
+	// handle any borrows
+	for i := len(result) - 2; i >= 0; i-- {
+		if borrow {
+			// decrement this place value
+			if result[i] == 0 {
+				result[i] = byte(255) // if borrow
+				borrow = true
+			} else {
+				result[i] = result[i] - 1
+				borrow = false
+			}
+		}
+	}
+	return
+}
+
 // expandNet returns a slice containing all of the IPs in the given net up to
 // the given limit
 func expandNet(n *net.IPNet, limit int) []net.IP {
@@ -227,4 +262,40 @@ func expandNet(n *net.IPNet, limit int) []net.IP {
 		next = incrementIP(next)
 	}
 	return result
+}
+
+// IPLessThan compare two ip addresses true
+// ordered by ipv4 first, then ipv6 later
+// then by section left-most is most significant
+// e.g.
+// 10.0.0.0
+// 10.0.0.1
+// 192.169.0.1
+// 2001:db8::
+func IPLessThan(a, b net.IP) bool {
+	if len(a) != len(b) { // ipv6 comes after ipv4
+		return len(a) < len(b)
+	}
+	for i := range a { // go left to right and compare each one
+		if a[i] != b[i] {
+			return a[i] < b[i]
+		}
+	}
+	return false // they are equal
+}
+
+// IPMin returns the minimum of a and b
+func IPMin(a, b net.IP) net.IP {
+	if IPLessThan(a, b) {
+		return a
+	}
+	return b
+}
+
+// IPMax returns the maximum of a and b
+func IPMax(a, b net.IP) net.IP {
+	if IPLessThan(a, b) {
+		return b
+	}
+	return a
 }
