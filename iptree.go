@@ -42,7 +42,7 @@ func (t *ipTree) trimLeft(top *ipTree) *ipTree {
 		return nil
 	}
 
-	if containsNet(top.net, t.net) {
+	if ContainsNet(top.net, t.net) {
 		return t.left.trimLeft(top)
 	}
 	t.setRight(t.right.trimLeft(top))
@@ -55,7 +55,7 @@ func (t *ipTree) trimRight(top *ipTree) *ipTree {
 		return nil
 	}
 
-	if containsNet(top.net, t.net) {
+	if ContainsNet(top.net, t.net) {
 		return t.right.trimRight(top)
 	}
 	t.setLeft(t.left.trimRight(top))
@@ -71,11 +71,11 @@ func (t *ipTree) insert(newNode *ipTree) *ipTree {
 		return newNode
 	}
 
-	if containsNet(t.net, newNode.net) {
+	if ContainsNet(t.net, newNode.net) {
 		return t
 	}
 
-	if containsNet(newNode.net, t.net) {
+	if ContainsNet(newNode.net, t.net) {
 		// Replace the current top node and trim the tree
 		newNode.setLeft(t.left.trimLeft(newNode))
 		newNode.setRight(t.right.trimRight(newNode))
@@ -98,10 +98,10 @@ func (t *ipTree) contains(newNode *ipTree) bool {
 		return false
 	}
 
-	if containsNet(t.net, newNode.net) {
+	if ContainsNet(t.net, newNode.net) {
 		return true
 	}
-	if containsNet(newNode.net, t.net) {
+	if ContainsNet(newNode.net, t.net) {
 		return false
 	}
 	if bytes.Compare(newNode.net.IP, t.net.IP) < 0 {
@@ -161,10 +161,10 @@ func (t *ipTree) removeNet(net *net.IPNet) (top *ipTree) {
 	}
 
 	top = t
-	if containsNet(net, t.net) {
+	if ContainsNet(net, t.net) {
 		// Remove the current node
 		top = t.remove()
-	} else if containsNet(t.net, net) {
+	} else if ContainsNet(t.net, net) {
 		diff = netDifference(t.net, net)
 		t.net = diff[0]
 		for _, n := range diff[1:] {
