@@ -189,10 +189,7 @@ func ipToNet(ip net.IP) *net.IPNet {
 
 // incrementIP returns the given IP + 1
 func incrementIP(ip net.IP) (result net.IP) {
-	result = net.ParseIP("::")
-	if len(ip) == 4 {
-		result = net.ParseIP("0.0.0.0").To4()
-	}
+	result = make([]byte, len(ip)) // start off with a nice empty ip of proper length
 
 	carry := true
 	for i := len(ip) - 1; i >= 0; i-- {
@@ -209,32 +206,14 @@ func incrementIP(ip net.IP) (result net.IP) {
 
 // decrementIP returns the given IP 1 1
 func decrementIP(ip net.IP) (result net.IP) {
-	// copy the ip into the result
-	result = make([]byte, len(ip))
-	copy([]byte(result), []byte(ip))
+	result = make([]byte, len(ip)) // start off with a nice empty ip of proper length
 
-	// Can't decrement an nil or invalid ip
-	if len(result) != 4 && len(result) != 16 {
-		panic(fmt.Errorf("Bad number of bytes for address: %d", len(result)))
-	}
-	// do subtract
-	borrow := false
-	if result[len(ip)-1] == 0 {
-		result[len(ip)-1] = byte(255) // if borrow
-		borrow = true
-	} else {
-		result[len(ip)-1] = result[len(ip)-1] - 1
-	}
-
-	// handle any borrows
-	for i := len(result) - 2; i >= 0; i-- {
+	borrow := true
+	for i := len(ip) - 1; i >= 0; i-- {
+		result[i] = ip[i]
 		if borrow {
-			// decrement this place value
-			if result[i] == 0 {
-				result[i] = byte(255) // if borrow
-				borrow = true
-			} else {
-				result[i] = result[i] - 1
+			result[i]--
+			if result[i] != 255 { // if we overflowed, we'd end up here
 				borrow = false
 			}
 		}

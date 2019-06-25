@@ -14,8 +14,8 @@ func (r *IPRange) String() string {
 	return fmt.Sprintf("[%s,%s]", r.First, r.Last)
 }
 
-// IPRangeFromCIDR get an IP Range from a CIDR
-func IPRangeFromCIDR(cidr *net.IPNet) *IPRange {
+// IPRangeFromIPNet get an IPRange from an *ip.Net
+func IPRangeFromIPNet(cidr *net.IPNet) *IPRange {
 	return &IPRange{
 		First: cidr.IP,
 		Last:  BroadcastAddr(cidr),

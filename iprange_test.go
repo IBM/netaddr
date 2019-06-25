@@ -7,21 +7,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIPRangeFromCIDR(t *testing.T) {
+func TestIPRangeFromIPNet(t *testing.T) {
 	net, err := ParseNet("10.0.0.0/8")
 	assert.Nil(t, err)
 
-	ipRange := IPRangeFromCIDR(net)
+	ipRange := IPRangeFromIPNet(net)
 
 	assert.Equal(t, "10.0.0.0", ipRange.First.String())
 	assert.Equal(t, "10.255.255.255", ipRange.Last.String())
 	assert.Equal(t, "[10.0.0.0,10.255.255.255]", ipRange.String())
 }
-func TestIPRangeFromCIDRIPv6(t *testing.T) {
+
+func TestIPRangeFromIPNetIPv6(t *testing.T) {
 	net, err := ParseNet("2001::/16")
 	assert.Nil(t, err)
 
-	ipRange := IPRangeFromCIDR(net)
+	ipRange := IPRangeFromIPNet(net)
 
 	assert.Equal(t, "2001::", ipRange.First.String())
 	assert.Equal(t, "2001:ffff:ffff:ffff:ffff:ffff:ffff:ffff", ipRange.Last.String())
