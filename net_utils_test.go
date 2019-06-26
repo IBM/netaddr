@@ -83,7 +83,7 @@ func TestNetIP(t *testing.T) {
 
 // Just a little shortcut for parsing a CIDR and get the net.IPNet.
 func parse(str string) (n *net.IPNet) {
-	_, parsed, err := net.ParseCIDR(str)
+	parsed, err := ParseCIDRToNet(str)
 	if err == nil {
 		n = parsed
 	}
@@ -183,7 +183,7 @@ func TestParseCIDRErrors(t *testing.T) {
 
 func TestNetworkAddr(t *testing.T) {
 	assert.Equal(t, ParseIP("203.0.113.0"), NetworkAddr(parse("203.0.113.0/24")))
-	assert.Equal(t, ParseIP("10.0.0.0"), NetworkAddr(parse("10.0.0.0/16")))
+	assert.Equal(t, ParseIP("10.0.0.0"), NetworkAddr(parse("10.0.0.29/16")))
 	assert.Equal(t, ParseIP("10.1.64.0"), NetworkAddr(parse("10.1.66.3/18")))
 
 	assert.Equal(t, ParseIP("2001:db8::"), NetworkAddr(parse("2001:db8::/64")))
