@@ -211,7 +211,7 @@ func incrementIP(ip net.IP) (result net.IP) {
 	return
 }
 
-// decrementIP returns the given IP 1 1
+// decrementIP returns the given IP - 1
 func decrementIP(ip net.IP) (result net.IP) {
 	result = make([]byte, len(ip)) // start off with a nice empty ip of proper length
 

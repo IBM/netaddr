@@ -17,7 +17,7 @@ func (r *IPRange) String() string {
 // IPRangeFromIPNet get an IPRange from an *ip.Net
 func IPRangeFromIPNet(cidr *net.IPNet) *IPRange {
 	return &IPRange{
-		First: cidr.IP,
+		First: NetworkAddr(cidr),
 		Last:  BroadcastAddr(cidr),
 	}
 }
