@@ -41,7 +41,10 @@ func ParseCIDR(cidr string) (net.IP, *net.IPNet, error) {
 
 // ParseCIDRToNet is like ParseCIDR except that it only returns one *net.IPNet
 // that unifies the IP address and the mask. It leaves out the network address
-// which ParseCIDR returns.
+// which ParseCIDR returns. This may be considered an abuse of the IPNet
+// construct as it is documented that IP is supposed to be the "network
+// number". However, the public IPNet interface does not dissallow it and this
+// usage has been spotted in the wild.
 func ParseCIDRToNet(cidr string) (*net.IPNet, error) {
 	ip, ipNet, err := ParseCIDR(cidr)
 	if err != nil {
@@ -79,7 +82,11 @@ func NewIP(size int) net.IP {
 
 // NetworkAddr returns the first address in the given network, or the network address.
 func NetworkAddr(n *net.IPNet) net.IP {
-	return n.IP
+	network := NewIP(len(n.IP))
+	for i := 0; i < len(n.IP); i++ {
+		network[i] = n.IP[i] & n.Mask[i]
+	}
+	return network
 }
 
 // BroadcastAddr returns the last address in the given network, or the broadcast address.
