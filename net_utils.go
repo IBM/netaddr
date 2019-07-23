@@ -196,10 +196,7 @@ func ipToNet(ip net.IP) *net.IPNet {
 
 // incrementIP returns the given IP + 1
 func incrementIP(ip net.IP) (result net.IP) {
-	result = net.ParseIP("::")
-	if len(ip) == 4 {
-		result = net.ParseIP("0.0.0.0").To4()
-	}
+	result = make([]byte, len(ip)) // start off with a nice empty ip of proper length
 
 	carry := true
 	for i := len(ip) - 1; i >= 0; i-- {
@@ -208,6 +205,23 @@ func incrementIP(ip net.IP) (result net.IP) {
 			result[i]++
 			if result[i] != 0 {
 				carry = false
+			}
+		}
+	}
+	return
+}
+
+// decrementIP returns the given IP - 1
+func decrementIP(ip net.IP) (result net.IP) {
+	result = make([]byte, len(ip)) // start off with a nice empty ip of proper length
+
+	borrow := true
+	for i := len(ip) - 1; i >= 0; i-- {
+		result[i] = ip[i]
+		if borrow {
+			result[i]--
+			if result[i] != 255 { // if we overflowed, we'd end up here
+				borrow = false
 			}
 		}
 	}
@@ -234,4 +248,40 @@ func expandNet(n *net.IPNet, limit int) []net.IP {
 		next = incrementIP(next)
 	}
 	return result
+}
+
+// IPLessThan compare two ip addresses true
+// ordered by ipv4 first, then ipv6 later
+// then by section left-most is most significant
+// e.g.
+// 10.0.0.0
+// 10.0.0.1
+// 192.169.0.1
+// 2001:db8::
+func IPLessThan(a, b net.IP) bool {
+	if len(a) != len(b) { // ipv6 comes after ipv4
+		return len(a) < len(b)
+	}
+	for i := range a { // go left to right and compare each one
+		if a[i] != b[i] {
+			return a[i] < b[i]
+		}
+	}
+	return false // they are equal
+}
+
+// IPMin returns the minimum of a and b
+func IPMin(a, b net.IP) net.IP {
+	if IPLessThan(a, b) {
+		return a
+	}
+	return b
+}
+
+// IPMax returns the maximum of a and b
+func IPMax(a, b net.IP) net.IP {
+	if IPLessThan(a, b) {
+		return b
+	}
+	return a
 }

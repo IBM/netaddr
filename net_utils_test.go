@@ -1,12 +1,30 @@
 package netaddr
 
 import (
+	"fmt"
 	"math/big"
 	"net"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestDecrement(t *testing.T) {
+	for _, tc := range []*struct {
+		in, out net.IP
+	}{
+		{ParseIP("192.168.2.5"), ParseIP("192.168.2.4")},
+		{ParseIP("192.168.0.0"), ParseIP("192.167.255.255")},
+		{ParseIP("10.0.0.0"), ParseIP("9.255.255.255")},
+		{ParseIP("0.0.0.0"), ParseIP("255.255.255.255")},                    // 0 will cycle
+		{ParseIP("::"), ParseIP("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")}, // 0 will cycle
+		{ParseIP("1::"), ParseIP("0:ffff:ffff:ffff:ffff:ffff:ffff:ffff")},   // 0 will cycle
+	} {
+		actual := decrementIP(tc.in)
+		assert.Equal(t, tc.out, actual)
+	}
+}
 
 func TestExpandNet(t *testing.T) {
 	n, _ := ParseNet("203.0.113.0/29")
@@ -199,4 +217,46 @@ func TestBroadcastAddr(t *testing.T) {
 	// find the last address in a cidr
 	assert.Equal(t, ParseIP("2001:db8::ffff:ffff:ffff:ffff"), BroadcastAddr(parse("2001:db8::/64")))
 	assert.Equal(t, ParseIP("2001:dff:ffff:ffff:ffff:ffff:ffff:ffff"), BroadcastAddr(parse("2001:db8::/24")))
+}
+
+func TestIPLessThan(t *testing.T) {
+	ips := []net.IP{
+		ParseIP("10.0.0.0"),
+		ParseIP("2001::"),
+		ParseIP("192.168.1.1"),
+		ParseIP("192.168.1.2"),
+		ParseIP("10.0.0.1"),
+		ParseIP("0:0:0:0:0:ffff:c0a8:1"), // ipv4 version of 192.168.0.1
+		ParseIP("192.168.0.2").To16(),    // this should come after the ipv4s
+		ParseIP("10.0.1.3"),
+		ParseIP("::"),
+		ParseIP("1:1::"),
+		ParseIP("10.2.2.3"),
+		ParseIP("10.2.1.2"),
+		ParseIP("10.0.0.0"),
+		ParseIP("10.0.1.2"),
+		ParseIP("2001:43::"),
+		ParseIP("10.2.1.1"),
+	}
+	sort.SliceStable(ips, func(i, j int) bool {
+		return IPLessThan(ips[i], ips[j])
+	})
+	assert.Equal(t, "["+
+		"10.0.0.0 "+
+		"10.0.0.0 "+
+		"10.0.0.1 "+
+		"10.0.1.2 "+
+		"10.0.1.3 "+
+		"10.2.1.1 "+
+		"10.2.1.2 "+
+		"10.2.2.3 "+
+		"192.168.1.1 "+
+		"192.168.1.2 "+
+		":: "+
+		"192.168.0.1 "+
+		"192.168.0.2 "+
+		"1:1:: "+
+		"2001:: "+
+		"2001:43::"+
+		"]", fmt.Sprintf("%s", ips))
 }
