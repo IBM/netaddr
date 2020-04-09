@@ -19,6 +19,7 @@ library or elsewhere in go packages.
 
 | Python netaddr | Go                                |
 |----------------|-----------------------------------|
+| EUI            | ???                               |
 | IPAddress      | Use [IP] from [net]\*             |
 | IPNetwork      | Use [IPNet] from [net]\*\*        |
 | IPSet          | Use [IPSet]                       |
