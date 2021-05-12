@@ -285,3 +285,14 @@ func IPMax(a, b net.IP) net.IP {
 	}
 	return a
 }
+
+// IPv4 returns the IP address (in 4-byte form) of the
+// IPv4 address a.b.c.d.
+func IPv4(a, b, c, d byte) net.IP {
+	p := make(net.IP, net.IPv4len)
+	p[0] = a
+	p[1] = b
+	p[2] = c
+	p[3] = d
+	return p
+}
