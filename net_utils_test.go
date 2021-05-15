@@ -260,3 +260,12 @@ func TestIPLessThan(t *testing.T) {
 		"2001:43::"+
 		"]", fmt.Sprintf("%s", ips))
 }
+
+func TestIPv4(t *testing.T) {
+	assert.Equal(t, ParseIP("127.0.0.1"), IPv4(127, 0, 0, 1))
+}
+
+func TestIPv4Net(t *testing.T) {
+	lo, _ := ParseCIDRToNet("127.0.0.1/8")
+	assert.Equal(t, *lo, IPv4Net(127, 0, 0, 1, 8))
+}
