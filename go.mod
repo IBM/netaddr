@@ -1,4 +1,4 @@
-module github.com/IBM/netaddr
+module gopkg.in/netaddr.v1
 
 go 1.16
 
