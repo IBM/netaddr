@@ -262,12 +262,7 @@ func IPLessThan(a, b net.IP) bool {
 	if len(a) != len(b) { // ipv6 comes after ipv4
 		return len(a) < len(b)
 	}
-	for i := range a { // go left to right and compare each one
-		if a[i] != b[i] {
-			return a[i] < b[i]
-		}
-	}
-	return false // they are equal
+	return bytes.Compare(a, b) < 0
 }
 
 // IPMin returns the minimum of a and b
