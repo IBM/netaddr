@@ -431,3 +431,134 @@ func TestGetNetworks(t *testing.T) {
 	s.Remove(ParseIP("10.0.0.129"))
 	assert.Equal(t, "[10.0.0.128/32 10.0.0.130/31 10.0.0.132/30 10.0.0.136/29 10.0.0.144/28 10.0.0.160/27 10.0.0.192/26]", fmt.Sprintf("%s", s.GetNetworks()))
 }
+
+func unsafeParseNet(str string) *net.IPNet {
+	n, _ := ParseNet(str)
+	return n
+}
+
+func TestEqualTrivial(t *testing.T) {
+	a, b := &IPSet{}, &IPSet{}
+	assert.True(t, a.EqualInterface(b))
+
+	a.InsertNet(unsafeParseNet("10.0.0.0/24"))
+	assert.False(t, a.EqualInterface(b))
+	assert.False(t, b.EqualInterface(a))
+	assert.True(t, a.EqualInterface(a))
+	assert.True(t, b.EqualInterface(b))
+}
+
+func TestEqualSingleNode(t *testing.T) {
+	a, b := &IPSet{}, &IPSet{}
+	a.InsertNet(unsafeParseNet("10.0.0.0/24"))
+	b.InsertNet(unsafeParseNet("10.0.0.0/24"))
+
+	assert.True(t, a.EqualInterface(b))
+	assert.True(t, b.EqualInterface(a))
+}
+
+func TestEqualAllIPv4(t *testing.T) {
+	a, b, c := &IPSet{}, &IPSet{}, &IPSet{}
+	// Insert the entire IPv4 space into set a in one shot
+	a.InsertNet(unsafeParseNet("0.0.0.0/0"))
+
+	// Insert the entire IPv4 space piece by piece into b and c
+
+	// This list was constructed starting with 0.0.0.0/32 and 0.0.0.1/32,
+	// then adding 0.0.0.2/31, 0.0.0.4/30, ..., 128.0.0./1, and then
+	// randomizing the list.
+	bNets := []*net.IPNet{
+		unsafeParseNet("0.0.0.0/32"),
+		unsafeParseNet("0.0.0.1/32"),
+		unsafeParseNet("0.0.0.128/25"),
+		unsafeParseNet("0.0.0.16/28"),
+		unsafeParseNet("0.0.0.2/31"),
+		unsafeParseNet("0.0.0.32/27"),
+		unsafeParseNet("0.0.0.4/30"),
+		unsafeParseNet("0.0.0.64/26"),
+		unsafeParseNet("0.0.0.8/29"),
+		unsafeParseNet("0.0.1.0/24"),
+		unsafeParseNet("0.0.128.0/17"),
+		unsafeParseNet("0.0.16.0/20"),
+		unsafeParseNet("0.0.2.0/23"),
+		unsafeParseNet("0.0.32.0/19"),
+		unsafeParseNet("0.0.4.0/22"),
+		unsafeParseNet("0.0.64.0/18"),
+		unsafeParseNet("0.0.8.0/21"),
+		unsafeParseNet("0.1.0.0/16"),
+		unsafeParseNet("0.128.0.0/9"),
+		unsafeParseNet("0.16.0.0/12"),
+		unsafeParseNet("0.2.0.0/15"),
+		unsafeParseNet("0.32.0.0/11"),
+		unsafeParseNet("0.4.0.0/14"),
+		unsafeParseNet("0.64.0.0/10"),
+		unsafeParseNet("0.8.0.0/13"),
+		unsafeParseNet("1.0.0.0/8"),
+		unsafeParseNet("128.0.0.0/1"),
+		unsafeParseNet("16.0.0.0/4"),
+		unsafeParseNet("2.0.0.0/7"),
+		unsafeParseNet("32.0.0.0/3"),
+		unsafeParseNet("4.0.0.0/6"),
+		unsafeParseNet("64.0.0.0/2"),
+		unsafeParseNet("8.0.0.0/5"),
+	}
+
+	for _, n := range bNets {
+		assert.False(t, a.EqualInterface(b))
+		assert.False(t, b.EqualInterface(a))
+		b.InsertNet(n)
+		assert.False(t, b.EqualInterface(c))
+		assert.False(t, c.EqualInterface(b))
+	}
+
+	// Constructed a different way
+	cNets := []*net.IPNet{
+		unsafeParseNet("255.255.255.240/29"),
+		unsafeParseNet("0.0.0.0/1"),
+		unsafeParseNet("255.255.128.0/18"),
+		unsafeParseNet("255.255.240.0/21"),
+		unsafeParseNet("254.0.0.0/8"),
+		unsafeParseNet("255.240.0.0/13"),
+		unsafeParseNet("255.224.0.0/12"),
+		unsafeParseNet("248.0.0.0/6"),
+		unsafeParseNet("255.0.0.0/9"),
+		unsafeParseNet("255.252.0.0/15"),
+		unsafeParseNet("255.255.224.0/20"),
+		unsafeParseNet("255.255.255.224/28"),
+		unsafeParseNet("255.255.255.0/25"),
+		unsafeParseNet("252.0.0.0/7"),
+		unsafeParseNet("192.0.0.0/3"),
+		unsafeParseNet("255.192.0.0/11"),
+		unsafeParseNet("255.255.255.248/30"),
+		unsafeParseNet("255.255.252.0/23"),
+		unsafeParseNet("255.248.0.0/14"),
+		unsafeParseNet("255.255.255.192/27"),
+		unsafeParseNet("255.255.0.0/17"),
+		unsafeParseNet("255.254.0.0/16"),
+		unsafeParseNet("255.255.255.255/32"),
+		unsafeParseNet("128.0.0.0/2"),
+		unsafeParseNet("255.128.0.0/10"),
+		unsafeParseNet("255.255.255.128/26"),
+		unsafeParseNet("240.0.0.0/5"),
+		unsafeParseNet("255.255.255.252/31"),
+		unsafeParseNet("255.255.192.0/19"),
+		unsafeParseNet("255.255.254.0/24"),
+		unsafeParseNet("255.255.248.0/22"),
+		unsafeParseNet("224.0.0.0/4"),
+		unsafeParseNet("255.255.255.254/32"),
+	}
+
+	for _, n := range cNets {
+		assert.False(t, c.EqualInterface(a))
+		assert.False(t, c.EqualInterface(b))
+		c.InsertNet(n)
+	}
+
+	// At this point, all three should have the entire IPv4 space
+	assert.True(t, a.EqualInterface(b))
+	assert.True(t, a.EqualInterface(c))
+	assert.True(t, b.EqualInterface(a))
+	assert.True(t, b.EqualInterface(c))
+	assert.True(t, c.EqualInterface(a))
+	assert.True(t, c.EqualInterface(b))
+}

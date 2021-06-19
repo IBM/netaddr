@@ -99,6 +99,11 @@ func BroadcastAddr(n *net.IPNet) net.IP {
 	return broadcast
 }
 
+// EqualNet returns true iff a and b are the same network
+func EqualNet(a, b *net.IPNet) bool {
+	return a.IP.Equal(b.IP) && bytes.Equal(a.Mask, b.Mask)
+}
+
 // ContainsNet returns true if net2 is a subset of net1. To be clear, it
 // returns true if net1 == net2 also.
 func ContainsNet(net1, net2 *net.IPNet) bool {
