@@ -172,19 +172,24 @@ func divideNetInHalf(n *net.IPNet) (a, b *net.IPNet) {
 // into one larger cidr twice the size. If true, it returns the combined
 // network.
 func canCombineNets(a, b *net.IPNet) (ok bool, newNet *net.IPNet) {
-	if a.IP.Equal(b.IP) {
-		return
+	ipA, ipB := NetworkAddr(a), NetworkAddr(b)
+	if ipA.Equal(ipB) {
+		return false, nil
 	}
 	if bytes.Compare(a.Mask, b.Mask) != 0 {
-		return
+		return false, nil
 	}
 	ones, bits := a.Mask.Size()
-	newNet = &net.IPNet{IP: a.IP, Mask: net.CIDRMask(ones-1, bits)}
-	if newNet.Contains(b.IP) {
-		ok = true
-		return
+	mask := net.CIDRMask(ones-1, bits)
+	n := &net.IPNet{
+		IP:   NetworkAddr(&net.IPNet{IP: ipA, Mask: mask}),
+		Mask: mask,
 	}
-	return
+	if !n.Contains(ipB) {
+		return false, nil
+	}
+
+	return true, n
 }
 
 // ipToNet converts the given IP to a /32 or /128 network depending on the type
