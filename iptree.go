@@ -1,7 +1,6 @@
 package netaddr
 
 import (
-	"bytes"
 	"errors"
 	"math/big"
 	"net"
@@ -305,9 +304,17 @@ func (t *ipTree) validate() []error {
 		}
 
 		// assert order is correct
-		if lastNode != nil && bytes.Compare(lastNode.net.IP, n.net.IP) >= 0 {
-			errs = append(errs, errors.New("nodes must be in order: "+lastNode.net.IP.String()+" !< "+n.net.IP.String()))
+		if lastNode != nil {
+			if !IPLessThan(lastNode.net.IP, n.net.IP) {
+				errs = append(errs, errors.New("nodes must be in order: "+lastNode.net.IP.String()+" !< "+n.net.IP.String()))
+			}
+			// assert that nodes cannot be combined
+			mustCombine, _ := canCombineNets(lastNode.net, n.net)
+			if mustCombine {
+				errs = append(errs, errors.New("nodes must be combined: "+lastNode.net.String()+", "+n.net.String()))
+			}
 		}
+
 		lastNode = n
 	})
 

@@ -42,6 +42,7 @@ func TestValidateBadLinkageLeft(t *testing.T) {
 	}
 	assert.Equal(t, []error{
 		errors.New("linkage error: left.up node must equal node"),
+		errors.New("nodes must be combined: 10.0.0.0/24, 10.0.1.0/24"),
 	}, tree.validate())
 }
 
@@ -54,6 +55,7 @@ func TestValidateBadLinkageRight(t *testing.T) {
 	}
 	assert.Equal(t, []error{
 		errors.New("linkage error: right.up node must equal node"),
+		errors.New("nodes must be combined: 10.0.0.0/24, 10.0.1.0/24"),
 	}, tree.validate())
 }
 
@@ -75,6 +77,7 @@ func TestValidateOutOfOrder(t *testing.T) {
 	assert.Equal(t, []error{
 		errors.New("nodes must be in order: 10.0.2.0 !< 10.0.1.0"),
 		errors.New("nodes must be in order: 10.0.1.0 !< 10.0.0.0"),
+		errors.New("nodes must be combined: 10.0.1.0/24, 10.0.0.0/24"),
 		errors.New("nodes must be in order: 10.0.0.0 !< 10.0.0.0"),
 	}, tree.validate())
 }
