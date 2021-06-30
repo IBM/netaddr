@@ -76,6 +76,29 @@ func (s *IPSet) Contains(ip net.IP) bool {
 	return s.ContainsNet(ipToNet(ip))
 }
 
+// Equal returns true iff this set contains the same IPs as the other
+func (s *IPSet) Equal(other *IPSet) bool {
+	a, b := s.tree.first(), other.tree.first()
+
+	for ; a != nil && b != nil; a, b = a.next(), b.next() {
+		if !EqualNet(a.net, b.net) {
+			return false
+		}
+	}
+
+	return a == b
+}
+
+// EqualInterface returns true iff this set contains the same IPs as the other
+func (s *IPSet) EqualInterface(other interface{}) bool {
+	switch o := other.(type) {
+	case *IPSet:
+		return s.Equal(o)
+	default:
+		return false
+	}
+}
+
 // Union computes the union of this IPSet and another set. It returns the
 // result as a new set.
 func (s *IPSet) Union(other *IPSet) (newSet *IPSet) {

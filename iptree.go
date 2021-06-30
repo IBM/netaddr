@@ -1,7 +1,6 @@
 package netaddr
 
 import (
-	"bytes"
 	"errors"
 	"math/big"
 	"net"
@@ -84,7 +83,7 @@ func (t *ipTree) insert(newNode *ipTree) *ipTree {
 		return newNode
 	}
 
-	if bytes.Compare(newNode.net.IP, t.net.IP) < 0 {
+	if IPLessThan(newNode.net.IP, t.net.IP) {
 		t.setLeft(t.left.insert(newNode))
 	} else {
 		t.setRight(t.right.insert(newNode))
@@ -104,7 +103,7 @@ func (t *ipTree) contains(newNode *ipTree) bool {
 	if ContainsNet(newNode.net, t.net) {
 		return false
 	}
-	if bytes.Compare(newNode.net.IP, t.net.IP) < 0 {
+	if IPLessThan(newNode.net.IP, t.net.IP) {
 		return t.left.contains(newNode)
 	}
 	return t.right.contains(newNode)
@@ -146,7 +145,7 @@ func (t *ipTree) removeNet(net *net.IPNet) (top *ipTree) {
 		return
 	}
 	// If net starts before me.net, recursively remove net from the left
-	if bytes.Compare(net.IP, t.net.IP) < 0 {
+	if IPLessThan(net.IP, t.net.IP) {
 		t.left = t.left.removeNet(net)
 	}
 
@@ -154,7 +153,7 @@ func (t *ipTree) removeNet(net *net.IPNet) (top *ipTree) {
 	// the right
 	diff := netDifference(net, t.net)
 	for _, n := range diff {
-		if bytes.Compare(t.net.IP, n.IP) < 0 {
+		if IPLessThan(t.net.IP, n.IP) {
 			t.right = t.right.removeNet(net)
 			break
 		}
@@ -305,9 +304,17 @@ func (t *ipTree) validate() []error {
 		}
 
 		// assert order is correct
-		if lastNode != nil && bytes.Compare(lastNode.net.IP, n.net.IP) >= 0 {
-			errs = append(errs, errors.New("nodes must be in order: "+lastNode.net.IP.String()+" !< "+n.net.IP.String()))
+		if lastNode != nil {
+			if !IPLessThan(lastNode.net.IP, n.net.IP) {
+				errs = append(errs, errors.New("nodes must be in order: "+lastNode.net.IP.String()+" !< "+n.net.IP.String()))
+			}
+			// assert that nodes cannot be combined
+			mustCombine, _ := canCombineNets(lastNode.net, n.net)
+			if mustCombine {
+				errs = append(errs, errors.New("nodes must be combined: "+lastNode.net.String()+", "+n.net.String()))
+			}
 		}
+
 		lastNode = n
 	})
 

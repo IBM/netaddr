@@ -99,6 +99,11 @@ func BroadcastAddr(n *net.IPNet) net.IP {
 	return broadcast
 }
 
+// EqualNet returns true iff a and b are the same network
+func EqualNet(a, b *net.IPNet) bool {
+	return a.IP.Equal(b.IP) && bytes.Equal(a.Mask, b.Mask)
+}
+
 // ContainsNet returns true if net2 is a subset of net1. To be clear, it
 // returns true if net1 == net2 also.
 func ContainsNet(net1, net2 *net.IPNet) bool {
@@ -172,19 +177,24 @@ func divideNetInHalf(n *net.IPNet) (a, b *net.IPNet) {
 // into one larger cidr twice the size. If true, it returns the combined
 // network.
 func canCombineNets(a, b *net.IPNet) (ok bool, newNet *net.IPNet) {
-	if a.IP.Equal(b.IP) {
-		return
+	ipA, ipB := NetworkAddr(a), NetworkAddr(b)
+	if ipA.Equal(ipB) {
+		return false, nil
 	}
 	if bytes.Compare(a.Mask, b.Mask) != 0 {
-		return
+		return false, nil
 	}
 	ones, bits := a.Mask.Size()
-	newNet = &net.IPNet{IP: a.IP, Mask: net.CIDRMask(ones-1, bits)}
-	if newNet.Contains(b.IP) {
-		ok = true
-		return
+	mask := net.CIDRMask(ones-1, bits)
+	n := &net.IPNet{
+		IP:   NetworkAddr(&net.IPNet{IP: ipA, Mask: mask}),
+		Mask: mask,
 	}
-	return
+	if !n.Contains(ipB) {
+		return false, nil
+	}
+
+	return true, n
 }
 
 // ipToNet converts the given IP to a /32 or /128 network depending on the type
@@ -262,12 +272,7 @@ func IPLessThan(a, b net.IP) bool {
 	if len(a) != len(b) { // ipv6 comes after ipv4
 		return len(a) < len(b)
 	}
-	for i := range a { // go left to right and compare each one
-		if a[i] != b[i] {
-			return a[i] < b[i]
-		}
-	}
-	return false // they are equal
+	return bytes.Compare(a, b) < 0
 }
 
 // IPMin returns the minimum of a and b
