@@ -93,8 +93,15 @@ func NetworkAddr(n *net.IPNet) net.IP {
 func BroadcastAddr(n *net.IPNet) net.IP {
 	// The golang net package doesn't make it easy to calculate the broadcast address. :(
 	broadcast := NewIP(len(n.IP))
-	for i := 0; i < len(n.IP); i++ {
-		broadcast[i] = n.IP[i] | ^n.Mask[i]
+	offset := 0
+
+	if len(n.IP) == net.IPv6len && len(n.Mask) == net.IPv4len {
+		offset = net.IPv6len - net.IPv4len
+		copy(broadcast, n.IP[:offset])
+	}
+
+	for i := 0; i < len(n.Mask); i++ {
+		broadcast[i+offset] = n.IP[i+offset] | ^n.Mask[i]
 	}
 	return broadcast
 }
